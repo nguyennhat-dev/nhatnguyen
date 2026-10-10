@@ -52,8 +52,11 @@ ul{list-style:none;padding:0;display:grid;gap:4px;max-height:50vh;overflow-y:aut
 li{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:12px;cursor:pointer}
 li:hover{background:#1b2236}
 li.on{background:#2a2416;color:var(--acc)}
-li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-li span:last-child{color:var(--dim);font-size:.85rem;font-variant-numeric:tabular-nums}
+li{align-items:center}
+li span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+li span:nth-child(2){color:var(--dim);font-size:.85rem;font-variant-numeric:tabular-nums}
+.del{background:none;border:0;color:var(--dim);font-size:1rem;padding:2px 6px;border-radius:8px}
+.del:hover{color:var(--acc)}
 .empty{color:var(--dim);text-align:center;padding:16px 0}
 @media(prefers-reduced-motion:reduce){.disc{animation:none}*{transition:none!important}}
 </style>
@@ -122,8 +125,8 @@ li span:last-child{color:var(--dim);font-size:.85rem;font-variant-numeric:tabula
 
   <section class="card" aria-label="Danh sách phát">
     <div class="drop" id="drop">
-      <span>Kéo và thả file nhạc vào đây (.mp3, .wav, .m4a)</span>
-      <button class="pill" id="pick">Chọn file nhạc</button>
+      <span>Kéo và thả file nhạc vào đây (.mp3, .wav, .m4a). Nhạc được lưu trong trình duyệt, lần sau mở lại vẫn còn.</span>
+      <div class="pills"><button class="pill" id="pick">Chọn file nhạc</button><button class="pill" id="clear">Xóa danh sách</button></div>
       <input type="file" id="file" accept=".mp3,.wav,.m4a,audio/*" multiple hidden>
     </div>
     <ul id="list"></ul>
@@ -220,13 +223,64 @@ function applyVolume() {
 }
 
 /* ============ NẠP FILE ============ */
+/* ============ LƯU TRỮ LÂU DÀI (IndexedDB) ============
+   Mỗi bài được lưu cả file nhạc (blob) trong trình duyệt để lần sau mở lại không phải thêm lại.
+   Hoạt động ngoại tuyến hoàn toàn, không cần mạng. */
+let db = null;
+const dbOpen = () => new Promise(res => {
+  try {
+    const r = indexedDB.open("nguyen-nhat-player", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("t", { keyPath: "id", autoIncrement: true });
+    r.onsuccess = () => res(r.result); r.onerror = () => res(null);
+  } catch (e) { res(null); }
+});
+const dbPut = rec => new Promise(res => {
+  if (!db) return res(null);
+  const q = db.transaction("t", "readwrite").objectStore("t").add(rec);
+  q.onsuccess = () => res(q.result); q.onerror = () => res(null);
+});
+const dbAll = () => new Promise(res => {
+  if (!db) return res([]);
+  const q = db.transaction("t").objectStore("t").getAll();
+  q.onsuccess = () => res(q.result); q.onerror = () => res([]);
+});
+const dbDel = id => { if (db && id != null) db.transaction("t", "readwrite").objectStore("t").delete(id); };
+const dbClear = () => { if (db) db.transaction("t", "readwrite").objectStore("t").clear(); };
+
+/* Tạo một bài trong danh sách từ file/blob và đọc thời lượng */
+function mkTrack(name, blob, id) {
+  const t = { name, url: URL.createObjectURL(blob), dur: 0, id };
+  tracks.push(t); order.push(tracks.length - 1);
+  const a = new Audio(); a.preload = "metadata"; a.src = t.url;
+  a.onloadedmetadata = () => { t.dur = a.duration; renderList(); };
+  return t;
+}
+
+/* Đưa bộ phát về trạng thái trống */
+function resetNow() {
+  if (ctx) decks.forEach(d => d.el.pause());
+  pos = -1;
+  $("#title").textContent = "Chưa có bài hát";
+  $("#seek").value = 0; fill($("#seek"));
+  $("#cur").textContent = "0:00"; $("#dur").textContent = "0:00";
+}
+
+/* Xóa một bài khỏi danh sách và khỏi bộ nhớ trình duyệt */
+function removeAt(p) {
+  const ti = order[p], t = tracks[ti];
+  dbDel(t.id); URL.revokeObjectURL(t.url);
+  tracks.splice(ti, 1);
+  order = order.filter((_, i) => i !== p).map(x => x > ti ? x - 1 : x);
+  if (p < pos) pos--;
+  else if (p === pos) { if (order.length) { play(Math.min(p, order.length - 1), false); } else resetNow(); }
+  renderList();
+}
+
 function addFiles(files) {
   const ok = [...files].filter(f => /\.(mp3|wav|m4a)$/i.test(f.name) || f.type.startsWith("audio/"));
   ok.forEach(f => {
-    const t = { name: f.name.replace(/\.[^.]+$/, ""), url: URL.createObjectURL(f), dur: 0 };
-    tracks.push(t); order.push(tracks.length - 1);
-    const a = new Audio(); a.preload = "metadata"; a.src = t.url;      // đọc thời lượng
-    a.onloadedmetadata = () => { t.dur = a.duration; renderList(); };
+    const t = mkTrack(f.name.replace(/\.[^.]+$/, ""), f, null);
+    dbPut({ name: t.name, blob: f }).then(id => { t.id = id; });   // lưu lâu dài
   });
   if (ok.length) { if (shuffleOn) reshuffle(); renderList(); if (pos < 0) play(0, false); }
 }
@@ -238,9 +292,10 @@ function renderList() {
   order.forEach((ti, p) => {
     const li = document.createElement("li");
     if (p === pos) li.className = "on";
-    li.innerHTML = "<span></span><span>" + fmt(tracks[ti].dur) + "</span>";
+    li.innerHTML = "<span></span><span>" + fmt(tracks[ti].dur) + '</span><button class="del" aria-label="Xóa bài này">✕</button>';
     li.firstChild.textContent = tracks[ti].name;
     li.onclick = () => { initAudio(); play(p, xfOn); };
+    li.querySelector(".del").onclick = ev => { ev.stopPropagation(); removeAt(p); };
     ul.appendChild(li);
   });
 }
@@ -386,6 +441,22 @@ setInterval(() => {
 /* Gắn sự kiện cho các nút hẹn giờ và tô màu thanh trượt ban đầu */
 document.querySelectorAll("#sleepPills button").forEach(b => b.onclick = () => setSleep(+b.dataset.m));
 fill($("#vol")); fill($("#seek")); renderList();
+
+/* Xóa toàn bộ danh sách */
+$("#clear").onclick = () => {
+  if (!tracks.length || !confirm("Xóa toàn bộ danh sách nhạc đã lưu?")) return;
+  tracks.forEach(t => URL.revokeObjectURL(t.url));
+  tracks = []; order = []; dbClear(); resetNow(); renderList();
+};
+
+/* Khi mở lại: nạp danh sách đã lưu (chưa tự phát) và xin trình duyệt giữ dữ liệu bền vững */
+(async () => {
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+  db = await dbOpen();
+  const saved = await dbAll();
+  saved.forEach(r => mkTrack(r.name, r.blob, r.id));
+  if (saved.length) { renderList(); $("#status").textContent = "Đã khôi phục " + saved.length + " bài, bấm phát để nghe"; }
+})();
 </script>
 </body>
 </html>
