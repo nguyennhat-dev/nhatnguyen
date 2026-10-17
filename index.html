@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d111d">
 <title>Nguyễn Nhật</title>
 <style>
 :root{--bg:#0d111d;--card:#141a2a;--line:#262d45;--text:#eef0f6;--dim:#8d93a8;--acc:#f0b254}
@@ -13,23 +14,18 @@ header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 h1{font-size:1.5rem;font-weight:650}
 .clock{font-variant-numeric:tabular-nums;font-size:1.7rem;font-weight:300;color:var(--acc)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px 20px;display:grid;gap:22px}
-.disc{width:min(64vw,260px);aspect-ratio:1;margin:4px auto;border-radius:50%;position:relative;
- background:repeating-radial-gradient(circle,#1b2136 0 2px,#10142115 2px 4px),radial-gradient(circle,#232a44,#0e1220);
- box-shadow:0 18px 40px #0008,inset 0 0 0 2px #2a3150;animation:spin 6s linear infinite;animation-play-state:paused}
-.disc::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 20deg,#fff0,#ffffff14,#fff0 30%,#fff0 50%,#ffffff10,#fff0 80%)}
-.disc::after{content:"";position:absolute;inset:36%;border-radius:50%;background:var(--acc);box-shadow:0 0 0 7px #0d111d}
-.disc.spin{animation-play-state:running}
-@keyframes spin{to{transform:rotate(360deg)}}
 .info{text-align:center}
-.title{font-size:1.25rem;font-weight:600;overflow-wrap:anywhere}
+.title{font-size:1.5rem;font-weight:650;overflow-wrap:anywhere}
 .sub{color:var(--dim);font-size:.95rem;margin-top:6px}
 .row{display:flex;align-items:center;gap:14px}
 .time{font-size:.95rem;color:var(--dim);font-variant-numeric:tabular-nums;min-width:38px}
+.time.w{min-width:56px}
 input[type=range]{-webkit-appearance:none;appearance:none;flex:1;width:100%;height:6px;border-radius:3px;cursor:pointer;outline:none;
- background:linear-gradient(to right,var(--acc) var(--p,0%),var(--line) var(--p,0%))}
+background:linear-gradient(to right,var(--acc) var(--p,0%),var(--line) var(--p,0%))}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:16px;border-radius:8px;background:#fff;box-shadow:0 1px 4px #0006}
 input[type=range]::-moz-range-thumb{width:26px;height:16px;border:0;border-radius:8px;background:#fff}
-button,select{font:inherit;color:var(--text);cursor:pointer}
+button{font:inherit;color:var(--text);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+input[type=range]{touch-action:pan-y}
 :focus-visible{outline:2px solid var(--acc);outline-offset:3px}
 .ctrl{justify-content:center;gap:18px}
 .round{width:52px;height:52px;border-radius:50%;background:transparent;border:1px solid var(--line);display:grid;place-items:center;padding:0}
@@ -45,7 +41,6 @@ button,select{font:inherit;color:var(--text);cursor:pointer}
 .sec{border-top:1px solid var(--line);padding-top:20px;display:grid;gap:14px}
 .sec h2{font-size:1.05rem;font-weight:600}
 .sec .pills{justify-content:flex-start}
-select{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:10px 16px}
 .drop{border:2px dashed var(--line);border-radius:16px;padding:18px;text-align:center;color:var(--dim);transition:.15s;display:grid;gap:12px;justify-items:center}
 .drop.over{border-color:var(--acc);color:var(--text);background:#1a2036}
 ul{list-style:none;padding:0;display:grid;gap:4px;max-height:50vh;overflow-y:auto}
@@ -57,82 +52,104 @@ li span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;wh
 li span:nth-child(2){color:var(--dim);font-size:.85rem;font-variant-numeric:tabular-nums}
 .del{background:none;border:0;color:var(--dim);font-size:1rem;padding:2px 6px;border-radius:8px}
 .del:hover{color:var(--acc)}
+.search{width:100%;-webkit-appearance:none;appearance:none;background:#0f1423;border:1px solid var(--line);border-radius:999px;padding:12px 18px;color:var(--text);font:inherit;font-size:1rem;outline:none}
+.search:focus{border-color:var(--acc)}
+.search::placeholder{color:var(--dim)}
 .empty{color:var(--dim);text-align:center;padding:16px 0}
-@media(prefers-reduced-motion:reduce){.disc{animation:none}*{transition:none!important}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="app">
-  <header>
-    <h1>Nguyễn Nhật</h1>
-    <div class="clock" id="clock">00:00:00</div>
-  </header>
-
-  <main class="card">
-    <div class="disc" id="disc" aria-hidden="true"></div>
-    <div class="info">
-      <div class="title" id="title">Chưa có bài hát</div>
-      <div class="sub" id="status">Thêm nhạc từ thiết bị của bạn</div>
-    </div>
-
-    <div class="row">
-      <span class="time" id="cur">0:00</span>
-      <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Thanh tiến trình">
-      <span class="time" id="dur" style="text-align:right">0:00</span>
-    </div>
-
-    <div class="row ctrl">
-      <button class="round" id="prev" aria-label="Bài trước"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
-      <button class="round big" id="play" aria-label="Phát hoặc tạm dừng"><svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg></button>
-      <button class="round" id="next" aria-label="Bài tiếp theo"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
-    </div>
-
-    <div class="pills">
-      <button class="pill" id="shuffle" aria-pressed="false">Trộn bài: Tắt</button>
-      <button class="pill" id="repeat" aria-pressed="false">Lặp lại: Tắt</button>
-    </div>
-
-    <div class="row">
-      <button class="round" id="mute" aria-label="Tắt tiếng"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z"/><path class="w" d="M15.5 8.5a5 5 0 0 1 0 7l-1.4-1.4a3 3 0 0 0 0-4.2zM18 6a8.5 8.5 0 0 1 0 12l-1.4-1.4a6.5 6.5 0 0 0 0-9.2z"/><path class="x" d="M15 9.4 16.4 8l2.1 2.1L20.6 8 22 9.4 19.9 11.5 22 13.6 20.6 15l-2.1-2.1L16.4 15 15 13.6l2.1-2.1z"/></svg></button>
-      <input type="range" id="vol" min="0" max="100" value="80" aria-label="Âm lượng">
-    </div>
-
-    <section class="sec">
-      <h2>Cân bằng âm lượng tự động</h2>
-      <div class="pills"><button class="pill" id="norm" aria-pressed="true">Đang bật</button></div>
-    </section>
-
-    <section class="sec">
-      <h2>Crossfade giữa các bài</h2>
-      <div class="pills">
-        <button class="pill" id="xf" aria-pressed="false">Đã tắt</button>
-        <select id="xfTime" aria-label="Thời gian crossfade"><option value="3">3 giây</option><option value="5" selected>5 giây</option><option value="8">8 giây</option><option value="12">12 giây</option></select>
-      </div>
-    </section>
-
-    <section class="sec">
-      <h2>Hẹn giờ tắt nhạc</h2>
-      <div class="pills" id="sleepPills">
-        <button class="pill" data-m="0" aria-pressed="true">Tắt</button>
-        <button class="pill" data-m="15" aria-pressed="false">15 phút</button>
-        <button class="pill" data-m="30" aria-pressed="false">30 phút</button>
-        <button class="pill" data-m="45" aria-pressed="false">45 phút</button>
-        <button class="pill" data-m="60" aria-pressed="false">60 phút</button>
-      </div>
-      <div class="sub" id="sleepInfo" style="margin:0">Chưa hẹn giờ tắt nhạc</div>
-    </section>
-  </main>
-
-  <section class="card" aria-label="Danh sách phát">
-    <div class="drop" id="drop">
-      <span>Kéo và thả file nhạc vào đây (.mp3, .wav, .m4a). Nhạc được lưu trong trình duyệt, lần sau mở lại vẫn còn.</span>
-      <div class="pills"><button class="pill" id="pick">Chọn file nhạc</button><button class="pill" id="clear">Xóa danh sách</button></div>
-      <input type="file" id="file" accept=".mp3,.wav,.m4a,audio/*" multiple hidden>
-    </div>
-    <ul id="list"></ul>
-  </section>
+ <header>
+   <h1>Nguyễn Nhật</h1>
+   <div class="clock" id="clock">00:00:00</div>
+ </header>
+ 
+ <main class="card">
+       <div class="info">
+     <div class="title" id="title">Chưa có bài hát</div>
+     <div class="sub" id="status">Thêm nhạc từ thiết bị của bạn</div>
+   </div>
+ 
+   <div class="row">
+     <span class="time" id="cur">0:00</span>
+     <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Thanh tiến trình">
+     <span class="time" id="dur" style="text-align:right">0:00</span>
+   </div>
+ 
+   <div class="row ctrl">
+     <button class="round" id="prev" aria-label="Bài trước"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+     <button class="round big" id="play" aria-label="Phát hoặc tạm dừng"><svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg></button>
+     <button class="round" id="next" aria-label="Bài tiếp theo"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+   </div>
+ 
+   <div class="pills">
+     <button class="pill" id="shuffle" aria-pressed="false">Trộn bài: Tắt</button>
+     <button class="pill" id="repeat" aria-pressed="false">Lặp lại: Tắt</button>
+   </div>
+ 
+   <div class="row">
+     <button class="round" id="mute" aria-label="Tắt tiếng"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z"/><path class="w" d="M15.5 8.5a5 5 0 0 1 0 7l-1.4-1.4a3 3 0 0 0 0-4.2zM18 6a8.5 8.5 0 0 1 0 12l-1.4-1.4a6.5 6.5 0 0 0 0-9.2z"/><path class="x" d="M15 9.4 16.4 8l2.1 2.1L20.6 8 22 9.4 19.9 11.5 22 13.6 20.6 15l-2.1-2.1L16.4 15 15 13.6l2.1-2.1z"/></svg></button>
+     <input type="range" id="vol" min="0" max="100" value="80" aria-label="Âm lượng">
+   </div>
+ 
+   <section class="sec">
+     <h2>Cân bằng âm lượng tự động</h2>
+     <div class="pills"><button class="pill" id="norm" aria-pressed="true">Đang bật</button></div>
+   </section>
+ 
+   <section class="sec">
+     <h2>Âm thanh không gian</h2>
+     <div class="pills"><button class="pill" id="spatial" aria-pressed="false">Đã tắt</button></div>
+   </section>
+ 
+   <section class="sec">
+     <h2>Chỉnh âm</h2>
+     <div class="row">
+       <span class="time w">Bass</span>
+       <input type="range" id="bass" min="-12" max="12" step="1" value="0" aria-label="Âm trầm (Bass)">
+       <span class="time w" id="bassV" style="text-align:right">0 dB</span>
+     </div>
+     <div class="row">
+       <span class="time w">Treble</span>
+       <input type="range" id="treble" min="-12" max="12" step="1" value="0" aria-label="Âm cao (Treble)">
+       <span class="time w" id="trebleV" style="text-align:right">0 dB</span>
+     </div>
+   </section>
+ 
+   <section class="sec">
+     <h2>Crossfade giữa các bài</h2>
+     <div class="pills">
+       <button class="pill" id="xf" aria-pressed="false">Đã tắt</button>
+       
+     </div>
+   </section>
+ 
+   <section class="sec">
+     <h2>Hẹn giờ tắt nhạc</h2>
+     <div class="pills" id="sleepPills">
+       <button class="pill" data-m="0" aria-pressed="true">Tắt</button>
+       <button class="pill" data-m="15" aria-pressed="false">15 phút</button>
+       <button class="pill" data-m="30" aria-pressed="false">30 phút</button>
+       <button class="pill" data-m="45" aria-pressed="false">45 phút</button>
+       <button class="pill" data-m="60" aria-pressed="false">60 phút</button>
+     </div>
+     <div class="sub" id="sleepInfo" style="margin:0">Chưa hẹn giờ tắt nhạc</div>
+   </section>
+ </main>
+ 
+ <section class="card" aria-label="Danh sách phát">
+   <div class="drop" id="drop">
+     <span>Kéo và thả file nhạc vào đây (.mp3, .wav, .m4a). Nhạc được lưu trong trình duyệt, lần sau mở lại vẫn còn.</span>
+     <div class="pills"><button class="pill" id="pick">Chọn file nhạc</button><button class="pill" id="clear">Xóa danh sách</button></div>
+     <input type="file" id="file" accept=".mp3,.wav,.m4a,audio/*" multiple hidden>
+   </div>
+   <input type="search" class="search" id="q" placeholder="Tìm bài hát trong danh sách" autocomplete="off" aria-label="Tìm nhạc">
+   <ul id="list"></ul>
+ </section>
 </div>
-
+ 
 <script>
 "use strict";
 /* Biểu tượng nút phát / tạm dừng */
@@ -140,231 +157,391 @@ const PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>';
 const PAUSE = '<svg viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
 /* Tô màu phần đã chạy của thanh trượt */
 const fill = el => el.style.setProperty("--p", (el.value - el.min) / (el.max - el.min) * 100 + "%");
+const XF = 6;                                  // thời gian crossfade cố định (giây)
+const SILENT = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAIARKwAABCxAgAEABAAZGF0YQQAAAAAAAAA";
+const pauseAll = () => { userPaused = true; decks.forEach(d => d.el.pause()); fading = false; };
+ 
+/* Media Session: hiện tên bài + nút Phát/Tạm dừng, Bài trước, Bài tiếp theo trên màn hình khóa / thông báo,
+  và giúp hệ điều hành giữ nhạc phát khi tắt màn hình hoặc chuyển ứng dụng. */
+function initSession() {
+ if (!("mediaSession" in navigator)) return;
+ const set = (n, f) => { try { navigator.mediaSession.setActionHandler(n, f); } catch (e) {} };
+ set("play", () => { userPaused = false; ctx.resume(); decks[active].el.play().catch(() => {}); });
+ set("pause", pauseAll);
+ set("previoustrack", () => { if (order.length) prev(); });
+ set("nexttrack", () => { if (order.length) next(xfOn); });
+ set("seekto", d => { decks[active].el.currentTime = d.seekTime; });
+ /* Không đăng ký seekbackward/seekforward: khi có hai nút tua này, nhiều hệ điều hành
+    (đặc biệt iOS) sẽ hiện nút tua thay cho nút chuyển bài trên màn hình khóa. */
+}
+function sessionMeta(p) {
+ if ("mediaSession" in navigator && window.MediaMetadata)
+   navigator.mediaSession.metadata = new MediaMetadata({ title: tracks[order[p]].name, artist: "Nguyễn Nhật", album: "Nhạc của tôi" });
+}
+const curDur = el => { const t = tracks[order[pos]]; return (t && t.dur) || el.duration; };
+let lastPos = 0;
+function updatePos(el) {                         // cập nhật thanh tiến trình trên màn hình khóa (1 lần/giây)
+ const now = Date.now();
+ if (now - lastPos < 1000 || !curDur(el) || !navigator.mediaSession || !navigator.mediaSession.setPositionState) return;
+ lastPos = now;
+ try { navigator.mediaSession.setPositionState({ duration: curDur(el), position: Math.min(el.currentTime, curDur(el)), playbackRate: 1 }); } catch (e) {}
+}
 /* ============ TIỆN ÍCH ============ */
 const $ = s => document.querySelector(s);
 const fmt = s => { if (!isFinite(s)) return "0:00"; s = Math.floor(s); return Math.floor(s/60) + ":" + String(s%60).padStart(2,"0"); };
 const pad = n => String(n).padStart(2,"0");
-
+/* Chuẩn hóa chuỗi để tìm kiếm: chữ thường, bỏ dấu tiếng Việt */
+const norm = t => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim();
+ 
 /* ============ TRẠNG THÁI ============ */
 let tracks = [];          // {name, url, dur}
 let order = [];           // thứ tự phát (chỉ số vào tracks), đổi khi trộn bài
 let pos = -1;             // vị trí hiện tại trong order
 let repeat = 0;           // 0: tắt, 1: lặp cả danh sách, 2: lặp 1 bài
-let shuffleOn = false, normOn = true, xfOn = false, muted = false;
-let fading = false, seeking = false;
-
+let shuffleOn = false, normOn = true, xfOn = false, muted = false, spatialOn = false;
+let fading = false, seeking = false, fadeEnd = 0, fadeOld = null, userPaused = false;
+let pending = null;       // vị trí (giây) cần tua tới khi bấm phát bài vừa được khôi phục; null = không có
+let lastSave = 0, prefsReady = false;   // prefsReady: chỉ lưu sau khi đã khôi phục xong, tránh ghi đè dữ liệu cũ
+ 
 /* ============ WEB AUDIO ============
-   Sơ đồ: deck(audio) -> deckGain -> compressor -> [analyser] -> makeup -> limiter -> sleepGain -> volume -> loa
-   - Hai "deck" (hai thẻ audio) để phát chồng nhau khi crossfade.
-   - compressor: nén đoạn nhạc to/gắt.
-   - makeup: tự tăng gain cho bài nhỏ dựa trên mức RMS đo bởi analyser.
-   - limiter: chặn đỉnh, tránh rè khi đã tăng gain. */
+  Sơ đồ: deck(audio) -> deckGain -> bass -> treble -> eqGain -> [không gian] -> compressor -> [analyser] -> makeup -> limiter -> sleepGain -> volume -> loa
+  - bass/treble: hai BiquadFilter (lowshelf/highshelf) cho thanh trượt Chỉnh âm.
+  - eqGain: tự giảm gain bằng mức đang tăng lớn nhất để không bị rè khi kéo bass/treble lên.
+  - [không gian]: mở rộng âm trường (đảo pha trễ chéo kênh) + phản xạ phòng nhẹ.
+  - Hai "deck" (hai thẻ audio) để phát chồng nhau khi crossfade.
+  - compressor: nén đoạn nhạc to/gắt.
+  - makeup: tự tăng gain cho bài nhỏ dựa trên mức RMS đo bởi analyser.
+  - limiter: chặn đỉnh, tránh rè khi đã tăng gain. */
 let ctx, decks = [], active = 0, comp, makeup, limiter, analyser, sleepG, volG, buf;
-
+let bassF, trebF, eqG, spXL, spXR, spAL, spAR;
+ 
 function initAudio() {
-  if (ctx) return;
-  ctx = new (window.AudioContext || window.webkitAudioContext)();
-  comp = ctx.createDynamicsCompressor();
-  makeup = ctx.createGain();
-  limiter = ctx.createDynamicsCompressor();
-  analyser = ctx.createAnalyser(); analyser.fftSize = 2048;
-  sleepG = ctx.createGain();
-  volG = ctx.createGain();
-  buf = new Float32Array(analyser.fftSize);
-  for (let i = 0; i < 2; i++) {
-    const el = new Audio(); el.preload = "auto";
-    const src = ctx.createMediaElementSource(el);
-    const g = ctx.createGain(); g.gain.value = i === 0 ? 1 : 0;
-    src.connect(g); g.connect(comp);
-    el.addEventListener("timeupdate", () => { if (decks[active].el === el) onTime(); });
-    el.addEventListener("ended", () => { if (decks[active].el === el) onEnded(); });
-    el.addEventListener("play", syncPlayBtn); el.addEventListener("pause", syncPlayBtn);
-    decks.push({ el, g });
-  }
-  comp.connect(analyser); comp.connect(makeup);
-  makeup.connect(limiter); limiter.connect(sleepG); sleepG.connect(volG); volG.connect(ctx.destination);
-  applyNorm(); applyVolume();
-  setInterval(autoGainLoop, 150);
+ if (ctx) return;
+ ctx = new (window.AudioContext || window.webkitAudioContext)();
+ comp = ctx.createDynamicsCompressor();
+ makeup = ctx.createGain();
+ limiter = ctx.createDynamicsCompressor();
+ analyser = ctx.createAnalyser(); analyser.fftSize = 1024;
+ sleepG = ctx.createGain();
+ volG = ctx.createGain();
+ buf = new Float32Array(analyser.fftSize);
+ buildFx();
+ for (let i = 0; i < 2; i++) {
+   const el = new Audio(); el.preload = "auto";
+   const src = ctx.createMediaElementSource(el);
+   const g = ctx.createGain(); g.gain.value = i === 0 ? 1 : 0;
+   src.connect(g); g.connect(bassF);
+   el.addEventListener("timeupdate", () => { if (decks[active].el === el) onTime(); });
+   el.addEventListener("ended", () => { if (decks[active].el === el) onEnded(); });
+   el.addEventListener("play", syncPlayBtn); el.addEventListener("pause", () => {
+     syncPlayBtn();
+     /* Nếu hệ thống tự dừng (không phải người dùng bấm) thì bật lại AudioContext và thử phát tiếp */
+     if (decks[active].el === el && !userPaused && !el.ended && el.currentTime > 0 && !seeking)
+       setTimeout(() => { if (!userPaused && el.paused && !el.ended) { ctx.resume().catch(() => {}); el.play().catch(() => {}); } }, 300);
+   });
+   decks.push({ el, g });
+ }
+ /* Mở khóa cả hai deck ngay lần chạm đầu tiên: trình duyệt di động chỉ cho phép
+    phát tự động ở nền (khi chuyển bài lúc tắt màn hình) với thẻ audio đã được người dùng kích hoạt. */
+ decks.forEach(d => { d.el.src = SILENT; d.el.play().then(() => { if (d.el.src === SILENT) d.el.pause(); }).catch(() => {}); });
+ /* Nếu hệ thống tạm ngắt AudioContext (khóa màn hình, cuộc gọi...) thì tự bật lại khi còn đang phát */
+ ctx.onstatechange = () => { if (ctx.state !== "running" && decks.some(x => !x.el.paused)) ctx.resume().catch(() => {}); };
+ document.addEventListener("visibilitychange", () => { if (ctx.state !== "running" && decks.some(x => !x.el.paused)) ctx.resume().catch(() => {}); });
+ comp.connect(analyser); comp.connect(makeup);
+ makeup.connect(limiter); limiter.connect(sleepG); sleepG.connect(volG); volG.connect(ctx.destination);
+ applyNorm(); applyVolume(); applyTone(); applySpatial();
+ initSession();
+ setInterval(autoGainLoop, 250);
 }
-
+ 
+/* Dựng chuỗi: bass -> treble -> eqGain -> (không gian) -> compressor */
+function buildFx() {
+ bassF = ctx.createBiquadFilter(); bassF.type = "lowshelf";  bassF.frequency.value = 200;
+ trebF = ctx.createBiquadFilter(); trebF.type = "highshelf"; trebF.frequency.value = 4000;
+ eqG = ctx.createGain();
+ /* Ép về stereo để file mono cũng có đủ hai kênh khi đi qua bộ tách kênh */
+ const spIn = ctx.createGain();
+ spIn.channelCount = 2; spIn.channelCountMode = "explicit"; spIn.channelInterpretation = "speakers";
+ const split = ctx.createChannelSplitter(2), merge = ctx.createChannelMerger(2);
+ bassF.connect(trebF); trebF.connect(eqG); eqG.connect(spIn); spIn.connect(split);
+ split.connect(merge, 0, 0); split.connect(merge, 1, 1);          // đường trực tiếp trái/phải (luôn có)
+ /* Một nhánh hiệu ứng: lấy kênh `from`, (lọc thông cao), trễ `sec` giây, nhân gain, đưa vào kênh `to`.
+    Gain khởi đầu bằng 0 nên khi tắt hiệu ứng, âm thanh y hệt đường trực tiếp. */
+ const leg = (from, to, sec, hpHz) => {
+   const d = ctx.createDelay(0.1); d.delayTime.value = sec;
+   const g = ctx.createGain(); g.gain.value = 0;
+   if (hpHz) { const f = ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = hpHz; split.connect(f, from); f.connect(d); }
+   else split.connect(d, from);
+   d.connect(g); g.connect(merge, 0, to);
+   return g;
+ };
+ spXL = leg(0, 1, 0.014, 300);   // trái -> phải, trễ 14ms, đảo pha: mở rộng âm trường (giữ nguyên dải trầm ở giữa)
+ spXR = leg(1, 0, 0.014, 300);   // phải -> trái
+ spAL = leg(0, 0, 0.029, 0);     // phản xạ phòng nhẹ bên trái
+ spAR = leg(1, 1, 0.041, 0);     // phản xạ phòng nhẹ bên phải (trễ khác để không bị "dội" đều)
+ merge.connect(comp);
+}
+ 
+/* Áp dụng bass/treble; giảm gain chung theo mức tăng lớn nhất để tránh vỡ tiếng */
+function applyTone() {
+ if (!ctx) return;
+ const b = +$("#bass").value, t = +$("#treble").value, T = ctx.currentTime;
+ bassF.gain.setTargetAtTime(b, T, 0.03);
+ trebF.gain.setTargetAtTime(t, T, 0.03);
+ eqG.gain.setTargetAtTime(Math.pow(10, -Math.max(0, b, t) / 20), T, 0.03);
+}
+const dbTxt = v => (v > 0 ? "+" : "") + v + " dB";
+function toneUI() {
+ [["bass", "bassV"], ["treble", "trebleV"]].forEach(([a, b]) => { const s = $("#" + a); fill(s); $("#" + b).textContent = dbTxt(+s.value); });
+}
+ 
+/* Bật/tắt âm thanh không gian: chỉ đổi gain các nhánh hiệu ứng, chuyển mượt nên không bị "tách" */
+function applySpatial() {
+ if (!ctx) return;
+ const T = ctx.currentTime, k = spatialOn ? 1 : 0;
+ spXL.gain.setTargetAtTime(-0.45 * k, T, 0.08); spXR.gain.setTargetAtTime(-0.45 * k, T, 0.08);
+ spAL.gain.setTargetAtTime(0.22 * k, T, 0.08);  spAR.gain.setTargetAtTime(0.22 * k, T, 0.08);
+}
+ 
 /* Bật/tắt bộ cân bằng: khi tắt thì compressor/limiter không nén (ratio = 1) và makeup = 1 */
 function applyNorm() {
-  if (!ctx) return;
-  const t = ctx.currentTime;
-  if (normOn) {
-    comp.threshold.setValueAtTime(-26, t); comp.knee.setValueAtTime(20, t); comp.ratio.setValueAtTime(6, t);
-    comp.attack.setValueAtTime(0.005, t);  comp.release.setValueAtTime(0.25, t);
-    limiter.threshold.setValueAtTime(-3, t); limiter.knee.setValueAtTime(0, t); limiter.ratio.setValueAtTime(20, t);
-    limiter.attack.setValueAtTime(0.002, t); limiter.release.setValueAtTime(0.1, t);
-  } else {
-    comp.ratio.setValueAtTime(1, t); limiter.ratio.setValueAtTime(1, t);
-    comp.threshold.setValueAtTime(0, t); limiter.threshold.setValueAtTime(0, t);
-    makeup.gain.setTargetAtTime(1, t, 0.2);
-  }
+ if (!ctx) return;
+ const t = ctx.currentTime;
+ if (normOn) {
+   comp.threshold.setValueAtTime(-26, t); comp.knee.setValueAtTime(20, t); comp.ratio.setValueAtTime(6, t);
+   comp.attack.setValueAtTime(0.005, t);  comp.release.setValueAtTime(0.25, t);
+   limiter.threshold.setValueAtTime(-3, t); limiter.knee.setValueAtTime(0, t); limiter.ratio.setValueAtTime(20, t);
+   limiter.attack.setValueAtTime(0.002, t); limiter.release.setValueAtTime(0.1, t);
+ } else {
+   comp.ratio.setValueAtTime(1, t); limiter.ratio.setValueAtTime(1, t);
+   comp.threshold.setValueAtTime(0, t); limiter.threshold.setValueAtTime(0, t);
+   makeup.gain.setTargetAtTime(1, t, 0.2);
+ }
 }
-
+ 
 /* Tự tăng âm: đo RMS sau compressor, rồi đẩy gain về mức mục tiêu (-18 dBFS).
-   Giới hạn gain từ 0.7x đến 3x (khoảng +9.5 dB) và thay đổi chậm cho mượt. */
+  Giới hạn gain từ 0.7x đến 3x (khoảng +9.5 dB) và thay đổi chậm cho mượt. */
 function autoGainLoop() {
-  if (!normOn || !ctx || decks[active].el.paused) return;
-  analyser.getFloatTimeDomainData(buf);
-  let sum = 0; for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
-  const rms = Math.sqrt(sum / buf.length);
-  if (rms < 0.003) return;                       // im lặng -> giữ nguyên
-  const want = Math.min(3, Math.max(0.7, 0.126 / rms));
-  makeup.gain.setTargetAtTime(want, ctx.currentTime, 0.6);
+ if (!normOn || !ctx || decks[active].el.paused) return;
+ analyser.getFloatTimeDomainData(buf);
+ let sum = 0; for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+ const rms = Math.sqrt(sum / buf.length);
+ if (rms < 0.003) return;                       // im lặng -> giữ nguyên
+ const want = Math.min(3, Math.max(0.7, 0.126 / rms));
+ makeup.gain.setTargetAtTime(want, ctx.currentTime, 0.6);
 }
-
+ 
 function applyVolume() {
-  if (!ctx) return;
-  const v = $("#vol").value / 100;
-  volG.gain.setTargetAtTime(muted ? 0 : v * v, ctx.currentTime, 0.03); // v² cho cảm giác tuyến tính hơn
-  $("#mute").classList.toggle("off", muted || v === 0); fill($("#vol"));
+ if (!ctx) return;
+ const v = $("#vol").value / 100;
+ volG.gain.setTargetAtTime(muted ? 0 : v * v, ctx.currentTime, 0.03); // v² cho cảm giác tuyến tính hơn
+ $("#mute").classList.toggle("off", muted || v === 0); fill($("#vol"));
 }
-
+ 
 /* ============ NẠP FILE ============ */
 /* ============ LƯU TRỮ LÂU DÀI (IndexedDB) ============
-   Mỗi bài được lưu cả file nhạc (blob) trong trình duyệt để lần sau mở lại không phải thêm lại.
-   Hoạt động ngoại tuyến hoàn toàn, không cần mạng. */
+  Mỗi bài được lưu cả file nhạc (blob) trong trình duyệt để lần sau mở lại không phải thêm lại.
+  Hoạt động ngoại tuyến hoàn toàn, không cần mạng. */
 let db = null;
 const dbOpen = () => new Promise(res => {
-  try {
-    const r = indexedDB.open("nguyen-nhat-player", 1);
-    r.onupgradeneeded = () => r.result.createObjectStore("t", { keyPath: "id", autoIncrement: true });
-    r.onsuccess = () => res(r.result); r.onerror = () => res(null);
-  } catch (e) { res(null); }
+ try {
+   const r = indexedDB.open("nguyen-nhat-player", 1);
+   r.onupgradeneeded = () => r.result.createObjectStore("t", { keyPath: "id", autoIncrement: true });
+   r.onsuccess = () => res(r.result); r.onerror = () => res(null);
+ } catch (e) { res(null); }
 });
 const dbPut = rec => new Promise(res => {
-  if (!db) return res(null);
-  const q = db.transaction("t", "readwrite").objectStore("t").add(rec);
-  q.onsuccess = () => res(q.result); q.onerror = () => res(null);
+ if (!db) return res(null);
+ const q = db.transaction("t", "readwrite").objectStore("t").add(rec);
+ q.onsuccess = () => res(q.result); q.onerror = () => res(null);
 });
 const dbAll = () => new Promise(res => {
-  if (!db) return res([]);
-  const q = db.transaction("t").objectStore("t").getAll();
-  q.onsuccess = () => res(q.result); q.onerror = () => res([]);
+ if (!db) return res([]);
+ const q = db.transaction("t").objectStore("t").getAll();
+ q.onsuccess = () => res(q.result); q.onerror = () => res([]);
 });
 const dbDel = id => { if (db && id != null) db.transaction("t", "readwrite").objectStore("t").delete(id); };
 const dbClear = () => { if (db) db.transaction("t", "readwrite").objectStore("t").clear(); };
-
+ 
 /* Tạo một bài trong danh sách từ file/blob và đọc thời lượng */
-function mkTrack(name, blob, id) {
-  const t = { name, url: URL.createObjectURL(blob), dur: 0, id };
-  tracks.push(t); order.push(tracks.length - 1);
-  const a = new Audio(); a.preload = "metadata"; a.src = t.url;
-  a.onloadedmetadata = () => { t.dur = a.duration; renderList(); };
-  return t;
+const dbSetDur = t => {
+ if (!db || t.id == null) return;
+ const st = db.transaction("t", "readwrite").objectStore("t"), g = st.get(t.id);
+ g.onsuccess = () => { if (g.result) { g.result.dur = t.dur; g.result.dv = 2; st.put(g.result); } };
+};
+/* Đọc thời lượng MP3 chính xác bằng cách cộng từng khung (frame) âm thanh.
+  Trình duyệt thường chỉ ước lượng theo bitrate nên file VBR hay bị sai thời lượng. */
+function mp3Duration(buf) {
+ const b = new Uint8Array(buf), n = b.length;
+ if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46) return 0;                 // WAV: để trình duyệt tự đọc
+ if (b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70) return 0; // M4A: để trình duyệt tự đọc
+ const BR = { 31: [0,32,64,96,128,160,192,224,256,288,320,352,384,416,448], 32: [0,32,48,56,64,80,96,112,128,160,192,224,256,320,384],
+              33: [0,32,40,48,56,64,80,96,112,128,160,192,224,256,320], 21: [0,32,48,56,64,80,96,112,128,144,160,176,192,224,256],
+              22: [0,8,16,24,32,40,48,56,64,80,96,112,128,144,160] };
+ const SR = { 3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000] };
+ let i = 0, total = 0, frames = 0;
+ if (b[0] === 0x49 && b[1] === 0x44 && b[2] === 0x33) i = 10 + ((b[6] & 127) << 21 | (b[7] & 127) << 14 | (b[8] & 127) << 7 | (b[9] & 127));
+ while (i + 4 < n) {
+   if (b[i] !== 0xFF || (b[i + 1] & 0xE0) !== 0xE0) { i++; continue; }
+   const ver = (b[i + 1] >> 3) & 3, layer = (b[i + 1] >> 1) & 3, bri = b[i + 2] >> 4, sri = (b[i + 2] >> 2) & 3, pad = (b[i + 2] >> 1) & 1;
+   if (ver === 1 || layer === 0 || bri === 0 || bri === 15 || sri === 3) { i++; continue; }
+   const L = 4 - layer;                                                          // 1, 2 hoặc 3
+   const br = BR[ver === 3 ? 30 + L : (L === 1 ? 21 : 22)][bri] * 1000, sr = SR[ver][sri];
+   const samples = L === 1 ? 384 : (L === 2 || ver === 3) ? 1152 : 576;
+   const len = L === 1 ? (Math.floor(12 * br / sr) + pad) * 4 : Math.floor(samples / 8 * br / sr) + pad;
+   if (len < 4) { i++; continue; }
+   const isInfo = frames === 0 && /Xing|Info/.test(String.fromCharCode(...b.subarray(i + 4, i + 44)));
+   if (!isInfo) total += samples / sr;                                           // khung Xing/Info không chứa tiếng
+   frames++; i += len;
+ }
+ return frames > 1 ? total : 0;
 }
-
+const browserDur = t => new Promise(r => {
+ const a = new Audio(); a.preload = "metadata";
+ a.onloadedmetadata = () => { const x = a.duration; a.removeAttribute("src"); r(x); };
+ a.onerror = () => r(0); a.src = t.url;
+});
+/* Đo thời lượng lần lượt từng bài rồi lưu lại */
+const metaQ = []; let metaBusy = false;
+async function pumpMeta() {
+ if (metaBusy || !metaQ.length) return;
+ metaBusy = true;
+ const t = metaQ.shift();
+ let d = 0;
+ try { d = mp3Duration(await t.blob.arrayBuffer()); } catch (e) {}
+ if (!d) d = await browserDur(t);
+ if (isFinite(d) && d > 0) { t.dur = d; dbSetDur(t); renderList(); }
+ metaBusy = false; pumpMeta();
+}
+function mkTrack(name, blob, id, dur) {
+ const t = { name, url: URL.createObjectURL(blob), dur: dur || 0, id, blob };
+ tracks.push(t); order.push(tracks.length - 1);
+ if (!t.dur) { metaQ.push(t); pumpMeta(); }
+ return t;
+}
+ 
 /* Đưa bộ phát về trạng thái trống */
 function resetNow() {
-  if (ctx) decks.forEach(d => d.el.pause());
-  pos = -1;
-  $("#title").textContent = "Chưa có bài hát";
-  $("#seek").value = 0; fill($("#seek"));
-  $("#cur").textContent = "0:00"; $("#dur").textContent = "0:00";
+ if (ctx) pauseAll();
+ pos = -1; pending = null;
+ $("#title").textContent = "Chưa có bài hát";
+ $("#seek").value = 0; fill($("#seek"));
+ $("#cur").textContent = "0:00"; $("#dur").textContent = "0:00";
 }
-
+ 
 /* Xóa một bài khỏi danh sách và khỏi bộ nhớ trình duyệt */
 function removeAt(p) {
-  const ti = order[p], t = tracks[ti];
-  dbDel(t.id); URL.revokeObjectURL(t.url);
-  tracks.splice(ti, 1);
-  order = order.filter((_, i) => i !== p).map(x => x > ti ? x - 1 : x);
-  if (p < pos) pos--;
-  else if (p === pos) { if (order.length) { play(Math.min(p, order.length - 1), false); } else resetNow(); }
-  renderList();
+ const ti = order[p], t = tracks[ti];
+ dbDel(t.id); URL.revokeObjectURL(t.url);
+ tracks.splice(ti, 1);
+ order = order.filter((_, i) => i !== p).map(x => x > ti ? x - 1 : x);
+ if (p < pos) pos--;
+ else if (p === pos) { if (order.length) { play(Math.min(p, order.length - 1), false); } else resetNow(); }
+ renderList();
 }
-
+ 
 function addFiles(files) {
-  const ok = [...files].filter(f => /\.(mp3|wav|m4a)$/i.test(f.name) || f.type.startsWith("audio/"));
-  ok.forEach(f => {
-    const t = mkTrack(f.name.replace(/\.[^.]+$/, ""), f, null);
-    dbPut({ name: t.name, blob: f }).then(id => { t.id = id; });   // lưu lâu dài
-  });
-  if (ok.length) { if (shuffleOn) reshuffle(); renderList(); if (pos < 0) play(0, false); }
+ const ok = [...files].filter(f => /\.(mp3|wav|m4a)$/i.test(f.name) || f.type.startsWith("audio/"));
+ ok.forEach(f => {
+   const t = mkTrack(f.name.replace(/\.[^.]+$/, ""), f, null);
+   dbPut({ name: t.name, blob: f }).then(id => { t.id = id; if (t.dur) dbSetDur(t); });   // lưu lâu dài
+ });
+ if (ok.length) { if (shuffleOn) reshuffle(); renderList(); if (pos < 0) { $("#title").textContent = tracks[order[0]].name; $("#status").textContent = "Bấm phát để nghe"; } }
 }
-
-function renderList() {
-  const ul = $("#list");
-  if (!tracks.length) { ul.innerHTML = '<li class="empty" style="justify-content:center;cursor:default">Danh sách đang trống</li>'; return; }
-  ul.innerHTML = "";
-  order.forEach((ti, p) => {
-    const li = document.createElement("li");
-    if (p === pos) li.className = "on";
-    li.innerHTML = "<span></span><span>" + fmt(tracks[ti].dur) + '</span><button class="del" aria-label="Xóa bài này">✕</button>';
-    li.firstChild.textContent = tracks[ti].name;
-    li.onclick = () => { initAudio(); play(p, xfOn); };
-    li.querySelector(".del").onclick = ev => { ev.stopPropagation(); removeAt(p); };
-    ul.appendChild(li);
-  });
+ 
+let rq = 0;
+function renderList() { if (!rq) rq = requestAnimationFrame(() => { rq = 0; drawList(); }); }
+function drawList() {
+ const ul = $("#list");
+ if (!tracks.length) { ul.innerHTML = '<li class="empty" style="justify-content:center;cursor:default">Danh sách đang trống</li>'; return; }
+ ul.innerHTML = "";
+ const q = norm($("#q").value); let shown = 0;     // từ khóa tìm kiếm hiện tại
+ order.forEach((ti, p) => {
+   if (q && !norm(tracks[ti].name).includes(q)) return;
+   const li = document.createElement("li");
+   if (p === pos) li.className = "on";
+   li.innerHTML = "<span></span><span>" + fmt(tracks[ti].dur) + '</span><button class="del" aria-label="Xóa bài này">✕</button>';
+   li.firstChild.textContent = tracks[ti].name;
+   li.onclick = () => { initAudio(); play(p, xfOn); };
+   li.querySelector(".del").onclick = ev => { ev.stopPropagation(); removeAt(p); };
+   ul.appendChild(li); shown++;
+ });
+ if (!shown) ul.innerHTML = '<li class="empty" style="justify-content:center;cursor:default">Không tìm thấy bài nào</li>';
 }
-
+ 
 /* ============ ĐIỀU KHIỂN PHÁT ============ */
 /* Phát bài ở vị trí p. Nếu fade = true và đang có nhạc thì crossfade giữa hai deck. */
 function play(p, fade) {
-  initAudio();
-  if (p < 0 || p >= order.length) return;
-  if (ctx.state === "suspended") ctx.resume();
-  const old = decks[active], nxt = decks[1 - active];
-  const t = ctx.currentTime, d = Math.max(1, +$("#xfTime").value);
-  const doFade = fade && xfOn && !old.el.paused;
-  pos = p;
-  nxt.el.src = tracks[order[p]].url;
-  nxt.el.currentTime = 0;
-  nxt.g.gain.cancelScheduledValues(t); old.g.gain.cancelScheduledValues(t);
-  if (doFade) {
-    nxt.g.gain.setValueAtTime(0, t); nxt.g.gain.linearRampToValueAtTime(1, t + d);   // bài mới to dần
-    old.g.gain.setValueAtTime(old.g.gain.value, t); old.g.gain.linearRampToValueAtTime(0, t + d); // bài cũ nhỏ dần
-    fading = true;
-    setTimeout(() => { old.el.pause(); fading = false; }, d * 1000 + 50);
-  } else {
-    old.el.pause(); old.g.gain.setValueAtTime(0, t); nxt.g.gain.setValueAtTime(1, t); fading = false;
-  }
-  active = 1 - active;
-  nxt.el.play().catch(() => {});
-  $("#title").textContent = tracks[order[p]].name;
-  renderList();
+ initAudio();
+ if (p < 0 || p >= order.length) return;
+ if (ctx.state !== "running") ctx.resume();
+ const old = decks[active], nxt = decks[1 - active];
+ const t = ctx.currentTime, d = XF;
+ const doFade = fade && xfOn && !old.el.paused;
+ pos = p; pending = null;
+ userPaused = false;
+ lastPos = 0;                                   // cho phép cập nhật ngay thanh tiến trình màn hình khóa khi đổi bài
+ nxt.el.src = tracks[order[p]].url;
+ nxt.el.currentTime = 0;
+ nxt.g.gain.cancelScheduledValues(t); old.g.gain.cancelScheduledValues(t);
+ if (doFade) {
+   nxt.g.gain.setValueAtTime(0, t); nxt.g.gain.linearRampToValueAtTime(1, t + d);   // bài mới to dần
+   old.g.gain.setValueAtTime(old.g.gain.value, t); old.g.gain.linearRampToValueAtTime(0, t + d); // bài cũ nhỏ dần
+   fading = true;
+   fadeEnd = t + d; fadeOld = old;     // onTime sẽ dừng deck cũ khi hết crossfade
+ } else {
+   old.el.pause(); old.g.gain.setValueAtTime(0, t); nxt.g.gain.setValueAtTime(1, t); fading = false;
+ }
+ active = 1 - active;
+ nxt.el.play().catch(() => {}); syncPlayBtn(); sessionMeta(p);
+ $("#title").textContent = tracks[order[p]].name;
+ renderList();
+ savePrefs();
 }
-
+ 
 function nextPos() {
-  if (pos + 1 < order.length) return pos + 1;
-  return repeat === 1 ? 0 : -1;
+ if (pos + 1 < order.length) return pos + 1;
+ return repeat === 1 ? 0 : -1;
 }
 function next(fade) { const n = nextPos(); if (n >= 0) play(n, fade); else decks[active].el.pause(); }
 function prev() {
-  const el = decks[active].el;
-  if (el.currentTime > 3) { el.currentTime = 0; return; }  // >3s thì quay lại đầu bài
-  play(pos > 0 ? pos - 1 : order.length - 1, xfOn);
+ const el = decks[active].el;
+ if (el.currentTime > 3) { el.currentTime = 0; return; }  // >3s thì quay lại đầu bài
+ play(pos > 0 ? pos - 1 : order.length - 1, xfOn);
 }
-
+ 
 function onEnded() {
-  if (repeat === 2) { const el = decks[active].el; el.currentTime = 0; el.play(); return; }
-  if (!fading) next(false);
+ if (repeat === 2) { const el = decks[active].el; el.currentTime = 0; el.play(); return; }
+ if (!fading) next(false);
 }
-
+ 
 /* Cập nhật thanh tiến trình và kích hoạt crossfade trước khi hết bài */
 function onTime() {
-  const el = decks[active].el;
-  if (!seeking && el.duration) { $("#seek").value = (el.currentTime / el.duration) * 1000; fill($("#seek")); }
-  $("#cur").textContent = fmt(el.currentTime);
-  $("#dur").textContent = fmt(el.duration);
-  const d = +$("#xfTime").value;
-  if (xfOn && !fading && repeat !== 2 && el.duration > d * 2 && el.duration - el.currentTime <= d && nextPos() >= 0) next(true);
+ const el = decks[active].el, dur = curDur(el);
+ if (!seeking && dur) { $("#seek").value = Math.min(1000, el.currentTime / dur * 1000); fill($("#seek")); }
+ $("#cur").textContent = fmt(el.currentTime);
+ $("#dur").textContent = fmt(dur);
+ const d = XF;
+ if (fading && ctx.currentTime >= fadeEnd) { fadeOld.el.pause(); fading = false; }
+ if (sleepEnd) sleepTick();
+ updatePos(el);
+ if (xfOn && !fading && repeat !== 2 && dur > d * 2 && dur - el.currentTime <= d && nextPos() >= 0) next(true);
+ if (Date.now() - lastSave > 3000) savePrefs();
 }
-
+ 
 function syncPlayBtn() {
-  const playing = decks.some(x => !x.el.paused);
-  $("#play").innerHTML = playing ? PAUSE : PLAY; $("#disc").classList.toggle("spin", playing);
-  $("#status").textContent = tracks.length ? (playing ? "Đang phát" : "Đã tạm dừng") : "Thêm nhạc từ thiết bị để bắt đầu";
+ const playing = decks.some(x => !x.el.paused);
+ $("#play").innerHTML = playing ? PAUSE : PLAY;
+ if ("mediaSession" in navigator) navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+ $("#status").textContent = tracks.length ? (playing ? "Đang phát" : "Đã tạm dừng") : "Thêm nhạc từ thiết bị để bắt đầu";
 }
-
+ 
 function reshuffle() {
-  const curTrack = pos >= 0 ? order[pos] : -1;
-  for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
-  if (curTrack >= 0) { const k = order.indexOf(curTrack); [order[0], order[k]] = [order[k], order[0]]; pos = 0; }
+ const curTrack = pos >= 0 ? order[pos] : -1;
+ for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+ if (curTrack >= 0) { const k = order.indexOf(curTrack); [order[0], order[k]] = [order[k], order[0]]; pos = 0; }
 }
-
+ 
 /* ============ SỰ KIỆN GIAO DIỆN ============ */
 $("#pick").onclick = () => $("#file").click();
 $("#file").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
@@ -372,91 +549,177 @@ const drop = $("#drop");
 ["dragenter","dragover"].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
 ["dragleave","drop"].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); if (ev === "drop" || e.target === document.documentElement) drop.classList.remove("over"); }));
 document.addEventListener("drop", e => { if (e.dataTransfer) addFiles(e.dataTransfer.files); });
-
+ 
 $("#play").onclick = () => {
-  initAudio();
-  if (pos < 0) { if (tracks.length) play(0, false); return; }
-  const el = decks[active].el;
-  if (ctx.state === "suspended") ctx.resume();
-  el.paused ? el.play() : el.pause();
+ initAudio();
+ if (pos < 0) { if (tracks.length) play(0, false); return; }
+ if (pending !== null) { playFrom(pos, pending); return; }
+ const el = decks[active].el;
+ if (ctx.state !== "running") ctx.resume();
+ if (el.paused) { userPaused = false; el.play().catch(() => {}); } else pauseAll();
+ syncPlayBtn();                                  // đổi biểu tượng ngay, không chờ sự kiện của thẻ audio
 };
 $("#next").onclick = () => { initAudio(); if (order.length) next(xfOn); };
 $("#prev").onclick = () => { initAudio(); if (order.length) prev(); };
-
+ 
 const seek = $("#seek");
-seek.oninput = () => { seeking = true; fill(seek); const el = decks[active].el; $("#cur").textContent = fmt(seek.value / 1000 * el.duration); };
-seek.onchange = () => { const el = decks[active].el; if (el.duration) el.currentTime = seek.value / 1000 * el.duration; seeking = false; };
-
+seek.oninput = () => { seeking = true; fill(seek); const el = decks[active].el; $("#cur").textContent = fmt(seek.value / 1000 * curDur(el)); };
+seek.onchange = () => {
+ const el = decks[active].el;
+ if (pending !== null && curDur(el)) pending = seek.value / 1000 * curDur(el);
+ else if (curDur(el)) el.currentTime = seek.value / 1000 * curDur(el);
+ seeking = false;
+};
+ 
 $("#vol").oninput = () => { muted = false; applyVolume(); fill($("#vol")); };
 $("#mute").onclick = () => { initAudio(); muted = !muted; applyVolume(); };
-
+ 
 function toggle(btn, on) { btn.setAttribute("aria-pressed", on); }
 $("#shuffle").onclick = e => {
-  shuffleOn = !shuffleOn; toggle(e.target, shuffleOn); e.target.textContent = "Trộn bài: " + (shuffleOn ? "Bật" : "Tắt");
-  if (shuffleOn) reshuffle(); else { const c = pos >= 0 ? order[pos] : -1; order = tracks.map((_, i) => i); pos = c; }
-  renderList();
+ shuffleOn = !shuffleOn; toggle(e.target, shuffleOn); e.target.textContent = "Trộn bài: " + (shuffleOn ? "Bật" : "Tắt");
+ if (shuffleOn) reshuffle(); else { const c = pos >= 0 ? order[pos] : -1; order = tracks.map((_, i) => i); pos = c; }
+ renderList();
 };
 $("#repeat").onclick = e => {
-  repeat = (repeat + 1) % 3;
-  e.target.textContent = ["Lặp lại: Tắt", "Lặp lại: Cả danh sách", "Lặp lại: 1 bài"][repeat];
-  toggle(e.target, repeat > 0);
+ repeat = (repeat + 1) % 3;
+ e.target.textContent = ["Lặp lại: Tắt", "Lặp lại: Cả danh sách", "Lặp lại: 1 bài"][repeat];
+ toggle(e.target, repeat > 0);
 };
 $("#norm").onclick = e => {
-  initAudio(); normOn = !normOn; applyNorm();
-  e.target.textContent = (normOn ? "Đang bật" : "Đã tắt"); toggle(e.target, normOn);
+ initAudio(); normOn = !normOn; applyNorm();
+ e.target.textContent = (normOn ? "Đang bật" : "Đã tắt"); toggle(e.target, normOn);
 };
+$("#spatial").onclick = e => {
+ initAudio(); spatialOn = !spatialOn; applySpatial();
+ e.target.textContent = (spatialOn ? "Đang bật" : "Đã tắt"); toggle(e.target, spatialOn);
+};
+$("#bass").oninput = $("#treble").oninput = () => { toneUI(); applyTone(); };
 $("#xf").onclick = e => {
-  xfOn = !xfOn; e.target.textContent = (xfOn ? "Đang bật" : "Đã tắt"); toggle(e.target, xfOn);
+ xfOn = !xfOn; e.target.textContent = (xfOn ? "Đang bật" : "Đã tắt"); toggle(e.target, xfOn);
 };
-
+ 
+/* ============ NHỚ CÀI ĐẶT & BÀI ĐANG NGHE ============
+  Lưu vào localStorage (nhỏ, đồng bộ, ngoại tuyến): Bass/Treble, âm thanh không gian, crossfade,
+  trộn/lặp, âm lượng, bài đang nghe (theo id trong IndexedDB) và vị trí đang phát. */
+const LS = "nguyen-nhat-prefs";
+function loadPrefs() { try { return JSON.parse(localStorage.getItem(LS)) || null; } catch (e) { return null; } }
+function savePrefs() {
+ if (!prefsReady) return;
+ lastSave = Date.now();
+ try {
+   const t = pos >= 0 ? tracks[order[pos]] : null;
+   const el = ctx ? decks[active].el : null;
+   localStorage.setItem(LS, JSON.stringify({
+     bass: +$("#bass").value, treble: +$("#treble").value, spatial: spatialOn, xf: xfOn,
+     shuffle: shuffleOn, repeat, vol: +$("#vol").value,
+     track: t && t.id != null ? t.id : null,
+     time: pending !== null ? pending : (el && t ? el.currentTime : 0)
+   }));
+ } catch (e) {}
+}
+/* Khôi phục các nút và thanh trượt (chạy ngay khi mở, trước khi nạp danh sách) */
+function restoreUI(P) {
+ if (!P) return;
+ const num = (v, lo, hi, d) => Number.isFinite(+v) && v !== null ? Math.min(hi, Math.max(lo, +v)) : d;
+ $("#bass").value = num(P.bass, -12, 12, 0);
+ $("#treble").value = num(P.treble, -12, 12, 0);
+ $("#vol").value = num(P.vol, 0, 100, 80); fill($("#vol"));
+ spatialOn = !!P.spatial; $("#spatial").textContent = spatialOn ? "Đang bật" : "Đã tắt"; toggle($("#spatial"), spatialOn);
+ xfOn = !!P.xf; $("#xf").textContent = xfOn ? "Đang bật" : "Đã tắt"; toggle($("#xf"), xfOn);
+ shuffleOn = !!P.shuffle; $("#shuffle").textContent = "Trộn bài: " + (shuffleOn ? "Bật" : "Tắt"); toggle($("#shuffle"), shuffleOn);
+ repeat = [0, 1, 2].includes(P.repeat) ? P.repeat : 0;
+ $("#repeat").textContent = ["Lặp lại: Tắt", "Lặp lại: Cả danh sách", "Lặp lại: 1 bài"][repeat]; toggle($("#repeat"), repeat > 0);
+}
+/* Khôi phục bài đang nghe sau khi nạp danh sách: chỉ hiển thị, chưa phát (bấm phát mới nạp và tua tới vị trí cũ) */
+function restoreTrack(P) {
+ P = P || {};
+ const ti = P.track != null ? tracks.findIndex(t => t.id === P.track) : -1;
+ if (ti >= 0) pos = ti;                       // lúc này order còn là thứ tự gốc nên chỉ số trùng nhau
+ if (shuffleOn) reshuffle();                  // nếu đang trộn: đưa bài hiện tại lên đầu, trộn phần còn lại
+ if (ti < 0) return;
+ const t = tracks[ti]; let at = +P.time > 0 ? +P.time : 0;
+ if (t.dur && at > t.dur - 3) at = 0;         // gần hết bài thì nghe lại từ đầu
+ pending = at;
+ $("#title").textContent = t.name;
+ $("#cur").textContent = fmt(at); $("#dur").textContent = fmt(t.dur);
+ if (t.dur) { $("#seek").value = Math.min(1000, at / t.dur * 1000); fill($("#seek")); }
+}
+/* Phát bài p rồi tua tới giây t khi đã đọc xong thông tin file */
+function playFrom(p, t) {
+ play(p, false);
+ const el = decks[active].el;
+ const go = () => { try { el.currentTime = t; } catch (e) {} };
+ if (el.readyState >= 1) go(); else el.addEventListener("loadedmetadata", go, { once: true });
+}
+/* Lưu sau mỗi thao tác (sự kiện nổi lên document sau khi nút xử lý xong) và khi rời/ẩn trang */
+document.addEventListener("click", () => setTimeout(savePrefs, 0));
+document.addEventListener("input", savePrefs);
+document.addEventListener("visibilitychange", () => { if (document.hidden) savePrefs(); });
+window.addEventListener("pagehide", savePrefs);
+ 
 /* ============ ĐỒNG HỒ & HẸN GIỜ TẮT NHẠC ============ */
 let sleepEnd = 0, sleepFading = false;
 function setSleep(m) {
-  document.querySelectorAll("#sleepPills button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.m === m));
-  sleepFading = false;
-  if (ctx) { sleepG.gain.cancelScheduledValues(ctx.currentTime); sleepG.gain.setValueAtTime(1, ctx.currentTime); }
-  sleepEnd = m ? Date.now() + m * 60000 : 0;
-  if (!m) $("#sleepInfo").textContent = "Chưa hẹn giờ tắt nhạc";
-};
+ document.querySelectorAll("#sleepPills button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.m === m));
+ sleepFading = false; sleepEnd = m ? Date.now() + m * 60000 : 0;
+ if (ctx) {
+   const t = ctx.currentTime;
+   sleepG.gain.cancelScheduledValues(t); sleepG.gain.setValueAtTime(1, t);
+   if (m) {                                     // hẹn sẵn đoạn nhỏ dần trên đồng hồ âm thanh: vẫn đúng giờ dù trang chạy nền
+     sleepG.gain.setValueAtTime(1, t + m * 60 - 10); sleepG.gain.linearRampToValueAtTime(0, t + m * 60);
+   }
+ }
+ $("#sleepInfo").textContent = m ? "Tắt nhạc sau " + fmt(m * 60) : "Chưa hẹn giờ tắt nhạc";
+}
+function sleepTick() {
+ if (!sleepEnd) return;
+ const left = (sleepEnd - Date.now()) / 1000;
+ $("#sleepInfo").textContent = "Tắt nhạc sau " + fmt(Math.max(0, left));
+ if (left <= 10 && !sleepFading && ctx) {       // 10 giây cuối: nhỏ dần
+   sleepFading = true;
+   sleepG.gain.cancelScheduledValues(ctx.currentTime);
+   sleepG.gain.setValueAtTime(sleepG.gain.value, ctx.currentTime);
+   sleepG.gain.linearRampToValueAtTime(0, ctx.currentTime + Math.max(left, 0.5));
+ }
+ if (left <= 0) {                               // hết giờ: dừng hẳn và trả gain về 1
+   pauseAll();
+   if (ctx) { sleepG.gain.cancelScheduledValues(ctx.currentTime); sleepG.gain.setValueAtTime(1, ctx.currentTime); }
+   setSleep(0); $("#sleepInfo").textContent = "Đã tắt nhạc theo hẹn giờ";
+ }
+}
 setInterval(() => {
-  const n = new Date();
-  $("#clock").textContent = pad(n.getHours()) + ":" + pad(n.getMinutes()) + ":" + pad(n.getSeconds());
-  if (!sleepEnd) return;
-  const left = (sleepEnd - Date.now()) / 1000;
-  $("#sleepInfo").textContent = "Tắt nhạc sau " + fmt(Math.max(0, left));
-  if (left <= 10 && !sleepFading && ctx) {          // 10 giây cuối: nhỏ dần
-    sleepFading = true;
-    sleepG.gain.cancelScheduledValues(ctx.currentTime);
-    sleepG.gain.setValueAtTime(sleepG.gain.value, ctx.currentTime);
-    sleepG.gain.linearRampToValueAtTime(0, ctx.currentTime + Math.max(left, 0.5));
-  }
-  if (left <= 0) {                                   // hết giờ: dừng hẳn và trả gain về 1
-    decks.forEach(d => d.el.pause());
-    if (ctx) { sleepG.gain.cancelScheduledValues(ctx.currentTime); sleepG.gain.setValueAtTime(1, ctx.currentTime); }
-    sleepEnd = 0; sleepFading = false; setSleep(0);
-    $("#sleepInfo").textContent = "Đã tắt nhạc theo hẹn giờ";
-  }
+ const n = new Date();
+ $("#clock").textContent = pad(n.getHours()) + ":" + pad(n.getMinutes()) + ":" + pad(n.getSeconds());
+ sleepTick();
 }, 1000);
-
+ 
 /* Gắn sự kiện cho các nút hẹn giờ và tô màu thanh trượt ban đầu */
 document.querySelectorAll("#sleepPills button").forEach(b => b.onclick = () => setSleep(+b.dataset.m));
-fill($("#vol")); fill($("#seek")); renderList();
-
+const PREFS = loadPrefs(); restoreUI(PREFS);
+fill($("#vol")); fill($("#seek")); toneUI(); renderList();
+ 
 /* Xóa toàn bộ danh sách */
 $("#clear").onclick = () => {
-  if (!tracks.length || !confirm("Xóa toàn bộ danh sách nhạc đã lưu?")) return;
-  tracks.forEach(t => URL.revokeObjectURL(t.url));
-  tracks = []; order = []; dbClear(); resetNow(); renderList();
+ if (!tracks.length || !confirm("Xóa toàn bộ danh sách nhạc đã lưu?")) return;
+ tracks.forEach(t => URL.revokeObjectURL(t.url));
+ tracks = []; order = []; dbClear(); resetNow(); renderList();
 };
-
+ 
 /* Khi mở lại: nạp danh sách đã lưu (chưa tự phát) và xin trình duyệt giữ dữ liệu bền vững */
 (async () => {
-  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-  db = await dbOpen();
-  const saved = await dbAll();
-  saved.forEach(r => mkTrack(r.name, r.blob, r.id));
-  if (saved.length) { renderList(); $("#status").textContent = "Đã khôi phục " + saved.length + " bài, bấm phát để nghe"; }
+ try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+ db = await dbOpen();
+ const saved = await dbAll();
+ saved.forEach(r => mkTrack(r.name, r.blob, r.id, r.dv === 2 ? r.dur : 0));
+ if (saved.length) { restoreTrack(PREFS); renderList(); if (pos < 0) $("#title").textContent = tracks[order[0]].name; $("#status").textContent = "Đã khôi phục " + saved.length + " bài, bấm phát để nghe"; }
+ prefsReady = true;
 })();
+ 
+/* Lần chạm đầu tiên: tạo AudioContext và mở khóa các thẻ audio trong thao tác người dùng */
+document.addEventListener("click", initAudio, { once: true });
+ 
+/* Thanh tìm kiếm: lọc danh sách ngay khi gõ */
+$("#q").oninput = renderList;
 </script>
 </body>
 </html>
